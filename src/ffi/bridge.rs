@@ -40,6 +40,10 @@ extern "C" {
         samples: *const f32,
         count: u32,
     ) -> i32;
+    fn fluidaudio_streaming_asr_text(
+        bridge: *mut std::ffi::c_void,
+        out_text: *mut *mut i8,
+    ) -> i32;
     fn fluidaudio_streaming_asr_finish(
         bridge: *mut std::ffi::c_void,
         out_text: *mut *mut i8,
@@ -477,6 +481,22 @@ impl FluidAudioBridge {
         } else {
             Err("Failed to feed samples to streaming ASR".to_string())
         }
+    }
+
+    pub fn streaming_asr_text(&self) -> Result<String, String> {
+        let mut text_ptr: *mut i8 = std::ptr::null_mut();
+        let result = unsafe { fluidaudio_streaming_asr_text(self.ptr, &mut text_ptr) };
+        if result != 0 {
+            return Err("Failed to read streaming ASR text".to_string());
+        }
+        if text_ptr.is_null() {
+            return Ok(String::new());
+        }
+        let text = unsafe { CStr::from_ptr(text_ptr) }
+            .to_string_lossy()
+            .into_owned();
+        unsafe { fluidaudio_free_string(text_ptr) };
+        Ok(text)
     }
 
     pub fn streaming_asr_finish(&self) -> Result<String, String> {

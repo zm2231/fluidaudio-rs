@@ -262,6 +262,15 @@ impl FluidAudio {
             .map_err(FluidAudioError::from)
     }
 
+    /// Read the session's running transcript (confirmed text followed by the
+    /// volatile tail) without ending it. Windows decode in the background, so
+    /// the text trails the audio fed so far and may revise its tail.
+    pub fn streaming_asr_text(&self) -> Result<String, FluidAudioError> {
+        self.bridge
+            .streaming_asr_text()
+            .map_err(FluidAudioError::from)
+    }
+
     /// Finish the streaming ASR session and get the transcription result
     ///
     /// # Returns

@@ -580,6 +580,25 @@ class FluidAudioBridgeInternal {
         semaphore.wait()
     }
 
+    func streamingAsrText() throws -> String {
+        guard let manager = streamingAsrManager else {
+            throw BridgeError.notInitialized
+        }
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var text = ""
+
+        Task {
+            let confirmed = await manager.confirmedTranscript
+            let volatile = await manager.volatileTranscript
+            text = [confirmed, volatile].filter { !$0.isEmpty }.joined(separator: " ")
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return text
+    }
+
     func streamingAsrFinish() throws -> String {
         guard let manager = streamingAsrManager else {
             throw BridgeError.notInitialized
@@ -934,6 +953,26 @@ public func fluidaudio_streaming_asr_feed(
         return 0
     } catch {
         print("Streaming ASR feed error: \(error)")
+        return -1
+    }
+}
+
+@_cdecl("fluidaudio_streaming_asr_text")
+public func fluidaudio_streaming_asr_text(
+    _ ptr: UnsafeMutableRawPointer?,
+    _ outText: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
+) -> Int32 {
+    guard let ptr = ptr else { return -1 }
+    let bridge = Unmanaged<FluidAudioBridgeInternal>.fromOpaque(ptr).takeUnretainedValue()
+
+    do {
+        let text = try bridge.streamingAsrText()
+        if let outText = outText {
+            outText.pointee = strdup(text)
+        }
+        return 0
+    } catch {
+        print("Streaming ASR text error: \(error)")
         return -1
     }
 }

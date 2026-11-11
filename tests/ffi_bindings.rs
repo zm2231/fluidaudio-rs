@@ -133,6 +133,7 @@ fn streaming_asr_session_methods_error_before_init() {
     let audio = FluidAudio::new().expect("bridge creation");
     assert!(audio.streaming_asr_start().is_err());
     assert!(audio.streaming_asr_feed(&[0.0_f32; 1600]).is_err());
+    assert!(audio.streaming_asr_text().is_err());
     assert!(audio.streaming_asr_finish().is_err());
 }
 
