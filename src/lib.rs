@@ -587,7 +587,11 @@ impl FluidAudio {
 
     /// Normalize a short spoken-form expression to written form.
     ///
-    /// Examples:
+    /// These bindings build FluidAudio without its `NemoTextProcessing` trait
+    /// (a prebuilt Rust staticlib that would duplicate the Rust runtime), so
+    /// every ITN call returns its input unchanged and
+    /// [`itn_is_native_available`](Self::itn_is_native_available) is `false`.
+    /// With the native engine linked, examples are:
     /// - `"two hundred thirty two"` → `"232"`
     /// - `"five dollars and fifty cents"` → `"$5.50"`
     /// - `"period"` → `"."`
@@ -602,8 +606,8 @@ impl FluidAudio {
 
     /// Sentence-mode normalization with sliding-window span matching.
     ///
-    /// Uses Apple's NaturalLanguage framework to disambiguate words like
-    /// `"period"` between punctuation commands and ordinary nouns/verbs.
+    /// Returns the input unchanged in these bindings; see
+    /// [`itn_normalize`](Self::itn_normalize).
     pub fn itn_normalize_sentence(&self, text: &str) -> Result<String, FluidAudioError> {
         self.bridge
             .itn_normalize_sentence(text)
@@ -611,8 +615,8 @@ impl FluidAudio {
     }
 
     /// Sentence-mode normalization with a caller-controlled maximum span size
-    /// (in tokens). Larger spans catch longer multi-word numbers/dates at the
-    /// cost of more work per sentence.
+    /// (in tokens). Returns the input unchanged in these bindings; see
+    /// [`itn_normalize`](Self::itn_normalize).
     pub fn itn_normalize_sentence_max_span(
         &self,
         text: &str,
@@ -623,11 +627,8 @@ impl FluidAudio {
             .map_err(FluidAudioError::from)
     }
 
-    /// Whether the underlying native NeMo ITN library is loaded.
-    ///
-    /// When `false`, the Swift-side normalizer falls back to its
-    /// Apple-NaturalLanguage-only path (still functional, but with reduced
-    /// coverage on long multi-token expressions).
+    /// Whether the underlying native NeMo ITN library is loaded. Always `false`
+    /// in these bindings, which build FluidAudio without `NemoTextProcessing`.
     pub fn itn_is_native_available(&self) -> bool {
         self.bridge.itn_is_native_available()
     }

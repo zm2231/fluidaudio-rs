@@ -11,13 +11,14 @@ env:
 jobs:
   test:
     name: Build and test (macOS, Apple Silicon)
-    # macos-15 ships Xcode 16 / Swift 6, required by FluidAudio 0.14.1.
-    runs-on: macos-15
+    # macos-26 ships Xcode 26 (Swift 6.2+), required by the tools-6.2 manifest
+    # that passes package traits to FluidAudio 0.18.3.
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.app
+      - name: Select Xcode 26.5
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app
 
       # Also emits a digest of the toolchain for the build cache below to key
       # on. This has to stay ahead of that step, and after Xcode selection.
@@ -57,8 +58,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target
-          # macos-15 is the `runs-on` above — keep the two in step.
-          key: build-macos-15-${{ runner.arch }}-rust${{ steps.rust.outputs.cachekey }}-swift${{ steps.swift.outputs.id }}-${{ hashFiles('**/Cargo.lock', 'Package.resolved') }}
+          # macos-26 is the `runs-on` above — keep the two in step.
+          key: build-macos-26-${{ runner.arch }}-rust${{ steps.rust.outputs.cachekey }}-swift${{ steps.swift.outputs.id }}-${{ hashFiles('**/Cargo.lock', 'Package.resolved') }}
 
       - name: Build library
         run: cargo build --lib

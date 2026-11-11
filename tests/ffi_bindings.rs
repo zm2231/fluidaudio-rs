@@ -158,40 +158,28 @@ fn vad_process_file_returns_file_not_found() {
     assert!(matches!(err, FluidAudioError::FileNotFound(_)));
 }
 
-/// ITN does not require model loading — `TextNormalizer.shared` is always
-/// available. Calling `itn_normalize` on a fresh bridge should round-trip a
-/// string from Swift back to Rust without crashing.
+/// FluidAudio is built without its `NemoTextProcessing` trait, so every ITN
+/// call passes its input through unchanged and native ITN reports unavailable.
 #[test]
-fn itn_normalize_round_trips() {
+fn itn_passes_text_through_without_native_engine() {
     let audio = FluidAudio::new().expect("bridge creation");
-    // Use a string that won't be modified by ITN regardless of which backend
-    // is active. We only care that we got a String back, not that it matches
-    // a specific normalized form.
-    let result = audio.itn_normalize("hello").expect("itn_normalize");
-    assert!(!result.is_empty(), "ITN result should not be empty");
-}
-
-/// Sentence-mode ITN must also work without init and accept arbitrary text.
-#[test]
-fn itn_normalize_sentence_round_trips() {
-    let audio = FluidAudio::new().expect("bridge creation");
-    let result = audio
-        .itn_normalize_sentence("the quick brown fox")
-        .expect("itn_normalize_sentence");
-    assert!(!result.is_empty());
-
-    let result = audio
-        .itn_normalize_sentence_max_span("five plus five", 8)
-        .expect("itn_normalize_sentence_max_span");
-    assert!(!result.is_empty());
-}
-
-/// `itn_is_native_available()` must return a definite bool without crashing,
-/// regardless of whether the native NeMo library is loaded in this process.
-#[test]
-fn itn_is_native_available_returns_bool() {
-    let audio = FluidAudio::new().expect("bridge creation");
-    let _ = audio.itn_is_native_available();
+    assert!(!audio.itn_is_native_available());
+    assert_eq!(
+        audio.itn_normalize("two hundred thirty two").expect("itn_normalize"),
+        "two hundred thirty two"
+    );
+    assert_eq!(
+        audio
+            .itn_normalize_sentence("five dollars and fifty cents period")
+            .expect("itn_normalize_sentence"),
+        "five dollars and fifty cents period"
+    );
+    assert_eq!(
+        audio
+            .itn_normalize_sentence_max_span("five plus five", 8)
+            .expect("itn_normalize_sentence_max_span"),
+        "five plus five"
+    );
 }
 
 // ---------------------------------------------------------------------------
