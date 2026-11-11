@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version:6.2
 import PackageDescription
 
 let package = Package(
@@ -15,7 +15,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.3"),
+        .package(
+            url: "https://github.com/FluidInference/FluidAudio.git",
+            exact: "0.18.3",
+            traits: ["TTS", "Diarizer"]
+        ),
     ],
     targets: [
         .target(
@@ -25,5 +29,6 @@ let package = Package(
             ],
             path: "swift"
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )
